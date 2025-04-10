@@ -5,6 +5,7 @@ from .telegram_bot import TelegramBot
 from .config import settings
 import json
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

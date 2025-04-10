@@ -1,26 +1,15 @@
 {
     "version": 2,
-    "functions": {
-        "src/api.py": {
-            "memory": 1024,
-            "maxDuration": 10,
-            "runtime": "python3.9"
-        }
-    },
-    "routes": [
+    "builds": [
         {
-            "src": "/api/(.*)",
-            "dest": "/src/api.py",
-            "methods": ["GET", "POST", "OPTIONS"],
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type"
-            }
+            "src": "vercel_app.py",
+            "use": "@vercel/python"
         }
     ],
-    "env": {
-        "PYTHONPATH": ".",
-        "PYTHONUNBUFFERED": "1"
-    }
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "vercel_app.py"
+        }
+    ]
 } 
