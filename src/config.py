@@ -6,7 +6,6 @@ load_dotenv()
 
 class Settings(BaseSettings):
     # Google Drive settings
-    google_drive_credentials_path: str = os.getenv("GOOGLE_DRIVE_CREDENTIALS_PATH", "credentials.json")
     regulations_folder_id: str = os.getenv("REGULATIONS_FOLDER_ID", "")
     
     # Telegram settings
