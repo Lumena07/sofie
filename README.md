@@ -1,105 +1,54 @@
-# Sofie - Tanzanian Aviation Regulations Assistant
+# Sofie - Aviation Regulations Assistant
 
-Sofie is an AI-powered assistant that provides accurate information about Tanzanian aviation regulations. It integrates with Google Drive to maintain an up-to-date knowledge base and responds to user queries through a Telegram bot interface.
+Sofie is an AI-powered assistant that helps users navigate and understand Tanzanian aviation regulations. It uses OpenAI's GPT-4 model and integrates with Google Drive to maintain an up-to-date knowledge base of aviation documents.
 
 ## Features
 
-- 📚 Access to latest Tanzanian aviation regulations
-- 🤖 Natural language processing for understanding queries
-- 🔄 Automatic knowledge base updates
-- ✅ Self-verification of answers
-- 💬 User-friendly Telegram interface
-
-## Prerequisites
-
-- Python 3.8+
-- Google Cloud Project with Drive API enabled
-- Telegram Bot Token (from BotFather)
-- OpenAI API Key
-- Vercel account (for deployment)
+- Natural language query processing for aviation regulations
+- Integration with Google Drive for document management
+- Real-time knowledge base updates
+- Agent traces for monitoring and debugging
+- Vercel deployment ready
 
 ## Setup
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/sofie.git
-cd sofie
-```
-
+1. Clone the repository
 2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Create a `.env` file with the following variables:
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   GOOGLE_DRIVE_FOLDER_ID=your_folder_id
+   ```
+
+## Project Structure
+
+- `src/agent_orchestrator.py`: Core agent logic and OpenAI integration
+- `src/drive_integration.py`: Google Drive integration for document management
+- `src/document_processor.py`: Document processing and knowledge base management
+- `vercel_app.py`: FastAPI application entry point for Vercel deployment
+
+## API Endpoints
+
+- `GET /api/health`: Health check endpoint
+- `POST /api/query`: Process natural language queries
+- `POST /api/update-knowledge`: Update the knowledge base
+- `GET /api/traces`: Retrieve agent interaction traces
+
+## Development
+
+To run the application locally:
+
 ```bash
-pip install -r requirements.txt
-```
-
-3. Set up environment variables:
-   - Copy `.env.example` to `.env`
-   - Fill in the required values:
-     - `GOOGLE_DRIVE_CREDENTIALS_PATH`: Path to your Google Drive API credentials
-     - `REGULATIONS_FOLDER_ID`: ID of the Google Drive folder containing regulations
-     - `TELEGRAM_BOT_TOKEN`: Your Telegram bot token
-     - `OPENAI_API_KEY`: Your OpenAI API key
-     - `VERCEL_URL`: Your Vercel deployment URL
-
-4. Set up Google Drive API:
-   - Create a project in Google Cloud Console
-   - Enable the Google Drive API
-   - Create OAuth 2.0 credentials
-   - Download the credentials and save as `credentials.json`
-
-5. Set up Telegram Bot:
-   - Create a new bot using BotFather
-   - Get the bot token
-   - Set the webhook URL to your Vercel deployment URL
-
-## Local Development
-
-1. Run the FastAPI server:
-```bash
-python -m src.api
-```
-
-2. For local testing, use ngrok to create a tunnel:
-```bash
-ngrok http 8000
-```
-
-3. Update the Telegram webhook URL with the ngrok URL:
-```bash
-curl -F "url=https://your-ngrok-url/api/webhook" https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
+uvicorn vercel_app:app --reload
 ```
 
 ## Deployment
 
-1. Install Vercel CLI:
-```bash
-npm i -g vercel
-```
-
-2. Deploy to Vercel:
-```bash
-vercel
-```
-
-3. Set up environment variables in Vercel dashboard
-
-4. Update the Telegram webhook URL to your Vercel deployment URL
-
-## Usage
-
-1. Start a chat with your Telegram bot
-2. Use `/start` to get started
-3. Ask questions about Tanzanian aviation regulations
-4. Use `/help` to see available commands
-5. Use `/update` to force update the knowledge base
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+The application is configured for deployment on Vercel. Simply connect your repository to Vercel and it will automatically deploy using the configuration in `vercel.json`.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+MIT License 
