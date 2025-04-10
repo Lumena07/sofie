@@ -5,18 +5,32 @@
             "src": "src/api.py",
             "use": "@vercel/python",
             "config": {
-                "maxLambdaSize": "15mb"
+                "maxLambdaSize": "15mb",
+                "runtime": "python3.9",
+                "includeFiles": ["requirements.txt"]
             }
         }
     ],
     "routes": [
         {
             "src": "/api/(.*)",
-            "dest": "src/api.py"
+            "dest": "src/api.py",
+            "methods": ["GET", "POST", "OPTIONS"],
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type"
+            }
         }
     ],
     "env": {
         "PYTHONPATH": ".",
         "PYTHONUNBUFFERED": "1"
+    },
+    "functions": {
+        "src/api.py": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
     }
 } 
