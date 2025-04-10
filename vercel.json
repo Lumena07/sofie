@@ -1,23 +1,41 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "vercel_app.py",
-            "use": "@vercel/python",
-            "config": {
-                "pythonVersion": "3.12",
-                "buildCommand": "chmod +x build.sh && ./build.sh"
-            }
+    "functions": {
+        "api/query": {
+            "runtime": "python3.12",
+            "memory": 1024,
+            "maxDuration": 10
+        },
+        "api/update-knowledge": {
+            "runtime": "python3.12",
+            "memory": 1024,
+            "maxDuration": 60
+        },
+        "api/health": {
+            "runtime": "python3.12",
+            "memory": 256,
+            "maxDuration": 5
         }
-    ],
+    },
     "routes": [
         {
+            "src": "/api/query",
+            "dest": "api/query"
+        },
+        {
+            "src": "/api/update-knowledge",
+            "dest": "api/update-knowledge"
+        },
+        {
+            "src": "/api/health",
+            "dest": "api/health"
+        },
+        {
             "src": "/(.*)",
-            "dest": "vercel_app.py"
+            "dest": "api/health"
         }
     ],
     "env": {
-        "PYTHONPATH": ".",
-        "PYTHON_VERSION": "3.12"
+        "PYTHONPATH": "."
     }
 } 
