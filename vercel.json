@@ -8,8 +8,11 @@
     ],
     "routes": [
         {
-            "src": "/api/(.*)",
+            "src": "/(.*)",
             "dest": "vercel_app.py"
         }
-    ]
+    ],
+    "env": {
+        "PYTHONPATH": "."
+    }
 } 
