@@ -5,7 +5,7 @@
             "src": "vercel_app.py",
             "use": "@vercel/python",
             "config": {
-                "pythonVersion": "3.11",
+                "pythonVersion": "3.12",
                 "buildCommand": "chmod +x build.sh && ./build.sh"
             }
         }
@@ -18,6 +18,6 @@
     ],
     "env": {
         "PYTHONPATH": ".",
-        "PYTHON_VERSION": "3.11"
+        "PYTHON_VERSION": "3.12"
     }
 } 

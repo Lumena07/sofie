@@ -7,16 +7,14 @@ set -e
 PYTHON_VERSION=$(python3 --version)
 echo "Current Python version: $PYTHON_VERSION"
 
-if command -v python3.11 &> /dev/null; then
-    echo "Using Python 3.11"
-    PYTHON_CMD=python3.11
-else
-    echo "Python 3.11 not found, attempting to use system Python"
-    PYTHON_CMD=python3
-fi
-
 # Upgrade pip
-$PYTHON_CMD -m pip install --upgrade pip
+python3 -m pip install --upgrade pip
 
-# Install requirements
-$PYTHON_CMD -m pip install -r requirements.txt 
+# Install core dependencies first
+python3 -m pip install typing-extensions==4.9.0
+python3 -m pip install pydantic==2.5.3
+python3 -m pip install starlette==0.32.0.post1
+python3 -m pip install fastapi==0.108.0
+
+# Install the rest of the requirements
+python3 -m pip install -r requirements.txt 
