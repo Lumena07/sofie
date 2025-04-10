@@ -1,0 +1,9 @@
+{
+  "buildCommand": null,
+  "devCommand": null,
+  "framework": null,
+  "installCommand": null,
+  "settings": {
+    "pythonVersion": "3.11"
+  }
+} 
