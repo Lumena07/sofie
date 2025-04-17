@@ -1,20 +1,22 @@
 from fastapi import FastAPI, Request, HTTPException
 import json
 import os
-import openai
+import requests
 from typing import Optional
 
 app = FastAPI()
 
-# Initialize OpenAI client
-openai.api_key = os.environ.get("OPENAI_API_KEY")
-
 async def process_query(query: str) -> Optional[str]:
     """Process a query using OpenAI."""
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
+        headers = {
+            "Authorization": f"Bearer {os.environ.get('OPENAI_API_KEY')}",
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "model": "gpt-4",
+            "messages": [
                 {
                     "role": "system",
                     "content": "You are Sofie, an AI assistant specialized in Tanzanian aviation regulations. Answer questions accurately and concisely."
@@ -24,12 +26,19 @@ async def process_query(query: str) -> Optional[str]:
                     "content": query
                 }
             ],
-            temperature=0.7,
-            max_tokens=500
+            "temperature": 0.7,
+            "max_tokens": 500
+        }
+        
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=data
         )
-        return response.choices[0].message['content']
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
     except Exception as e:
-        print(f"OpenAI API error: {str(e)}")  # Add logging for debugging
+        print(f"API error: {str(e)}")  # Add logging for debugging
         return None
 
 @app.post("/api/query")
@@ -56,5 +65,5 @@ async def handle_query(request: Request):
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     except Exception as e:
-        print(f"Error processing request: {str(e)}")  # Add logging for debugging
+        print(f"Request error: {str(e)}")  # Add logging for debugging
         raise HTTPException(status_code=500, detail=str(e)) 
