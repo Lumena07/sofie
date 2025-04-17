@@ -13,14 +13,17 @@
     "routes": [
         {
             "src": "/api/query",
+            "methods": ["POST"],
             "dest": "/api/query"
         },
         {
             "src": "/api/update-knowledge",
+            "methods": ["POST"],
             "dest": "/api/update-knowledge"
         },
         {
             "src": "/api/health",
+            "methods": ["GET"],
             "dest": "/api/health"
         },
         {
