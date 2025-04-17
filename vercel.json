@@ -15,7 +15,7 @@
         {
             "src": "/api/query",
             "methods": ["POST"],
-            "dest": "/api/query/index.py"
+            "dest": "api/query"
         },
         {
             "src": "/api/update-knowledge",
