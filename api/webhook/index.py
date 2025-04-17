@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+BASE_URL = "https://sofie-sage.vercel.app"  # Hardcode the production URL
 
 async def send_telegram_message(chat_id: int, text: str):
     """Send a message using Telegram API."""
@@ -46,8 +47,7 @@ async def telegram_webhook(request: Request):
         else:
             # Process query
             logger.info(f"Making request to query endpoint with text: {text}")
-            vercel_url = os.environ.get("VERCEL_URL")
-            query_url = f"https://{vercel_url}/api/query"
+            query_url = f"{BASE_URL}/api/query"
             logger.info(f"Query URL: {query_url}")
             
             try:
@@ -77,10 +77,9 @@ async def telegram_webhook(request: Request):
 @app.get("/api/webhook/test")
 async def test_webhook():
     """Test endpoint to verify the webhook is running."""
-    vercel_url = os.environ.get("VERCEL_URL")
     return {
         "status": "ok",
         "bot_token_set": bool(BOT_TOKEN),
-        "vercel_url": vercel_url,
-        "query_url": f"https://{vercel_url}/api/query" if vercel_url else None
+        "base_url": BASE_URL,
+        "query_url": f"{BASE_URL}/api/query"
     } 
