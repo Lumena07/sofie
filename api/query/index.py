@@ -7,12 +7,12 @@ from typing import Optional
 app = FastAPI()
 
 # Initialize OpenAI client
-client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 async def process_query(query: str) -> Optional[str]:
     """Process a query using OpenAI."""
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {
@@ -27,7 +27,7 @@ async def process_query(query: str) -> Optional[str]:
             temperature=0.7,
             max_tokens=500
         )
-        return response.choices[0].message.content
+        return response.choices[0].message['content']
     except Exception as e:
         print(f"OpenAI API error: {str(e)}")  # Add logging for debugging
         return None
