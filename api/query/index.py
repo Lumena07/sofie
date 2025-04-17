@@ -7,12 +7,12 @@ from typing import Optional
 app = FastAPI()
 
 # Initialize OpenAI client
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 async def process_query(query: str) -> Optional[str]:
     """Process a query using OpenAI."""
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {
@@ -29,6 +29,7 @@ async def process_query(query: str) -> Optional[str]:
         )
         return response.choices[0].message.content
     except Exception as e:
+        print(f"OpenAI API error: {str(e)}")  # Add logging for debugging
         return None
 
 @app.post("/api/query")
@@ -55,4 +56,5 @@ async def handle_query(request: Request):
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     except Exception as e:
+        print(f"Error processing request: {str(e)}")  # Add logging for debugging
         raise HTTPException(status_code=500, detail=str(e)) 
