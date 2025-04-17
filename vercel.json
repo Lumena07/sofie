@@ -1,38 +1,27 @@
 {
     "version": 2,
-    "functions": {
-        "api/query": {
-            "runtime": "@vercel/python@3.1.0",
-            "memory": 1024,
-            "maxDuration": 10
-        },
-        "api/update-knowledge": {
-            "runtime": "@vercel/python@3.1.0",
-            "memory": 1024,
-            "maxDuration": 60
-        },
-        "api/health": {
-            "runtime": "@vercel/python@3.1.0",
-            "memory": 256,
-            "maxDuration": 5
+    "builds": [
+        {
+            "src": "api/*/index.py",
+            "use": "@vercel/python"
         }
-    },
+    ],
     "routes": [
         {
             "src": "/api/query",
-            "dest": "api/query"
+            "dest": "/api/query"
         },
         {
             "src": "/api/update-knowledge",
-            "dest": "api/update-knowledge"
+            "dest": "/api/update-knowledge"
         },
         {
             "src": "/api/health",
-            "dest": "api/health"
+            "dest": "/api/health"
         },
         {
             "src": "/(.*)",
-            "dest": "api/health"
+            "dest": "/api/health"
         }
     ],
     "env": {
