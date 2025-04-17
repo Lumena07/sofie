@@ -11,6 +11,28 @@ api_key = os.getenv('OPENAI_API_KEY')
 print(f"API Key loaded: {'Yes' if api_key else 'No'}")
 print(f"API Key length: {len(api_key) if api_key else 0}")
 
+# Test root endpoint
+print("\nTesting root endpoint...")
+try:
+    response = requests.get('https://sofie-sage.vercel.app/api/query/')
+    print(f"Status: {response.status_code}")
+    print(f"Response: {response.text}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+
+# Test query endpoint
+print("\nTesting query endpoint...")
+try:
+    response = requests.post(
+        'https://sofie-sage.vercel.app/api/query',
+        json={'query': 'test'},
+        headers={'Content-Type': 'application/json'}
+    )
+    print(f"Status: {response.status_code}")
+    print(f"Response: {response.text}")
+except Exception as e:
+    print(f"Error: {str(e)}")
+
 try:
     # Prepare request data
     url = 'https://sofie-sage.vercel.app/api/query'
