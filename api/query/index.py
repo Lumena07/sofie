@@ -9,8 +9,13 @@ app = FastAPI()
 async def process_query(query: str) -> Optional[str]:
     """Process a query using OpenAI."""
     try:
+        api_key = os.environ.get('OPENAI_API_KEY')
+        if not api_key:
+            print("Error: OPENAI_API_KEY environment variable not set")
+            return None
+
         headers = {
-            "Authorization": f"Bearer {os.environ.get('OPENAI_API_KEY')}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         
@@ -33,26 +38,41 @@ async def process_query(query: str) -> Optional[str]:
         response = requests.post(
             "https://api.openai.com/v1/chat/completions",
             headers=headers,
-            json=data
+            json=data,
+            timeout=30
         )
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
+        
+        if response.status_code != 200:
+            print(f"OpenAI API error: Status {response.status_code}")
+            print(f"Response: {response.text}")
+            return None
+            
+        response_json = response.json()
+        if "choices" not in response_json or not response_json["choices"]:
+            print("OpenAI API error: No choices in response")
+            print(f"Response: {response_json}")
+            return None
+            
+        return response_json["choices"][0]["message"]["content"]
+    except requests.exceptions.Timeout:
+        print("OpenAI API timeout")
+        return None
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {str(e)}")
+        return None
     except Exception as e:
-        print(f"API error: {str(e)}")  # Add logging for debugging
+        print(f"Unexpected error: {str(e)}")
         return None
 
 @app.post("/api/query")
 async def handle_query(request: Request):
     try:
-        # Get the request body
         body = await request.json()
-        
-        # Extract the query from the request body
         query = body.get("query")
+        
         if not query:
             raise HTTPException(status_code=400, detail="Query is required")
 
-        # Process the query
         response_text = await process_query(query)
         if not response_text:
             raise HTTPException(status_code=500, detail="Failed to process query")
@@ -65,5 +85,5 @@ async def handle_query(request: Request):
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON")
     except Exception as e:
-        print(f"Request error: {str(e)}")  # Add logging for debugging
+        print(f"Request error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
