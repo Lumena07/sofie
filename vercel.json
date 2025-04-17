@@ -27,6 +27,11 @@
             "dest": "/api/webhook"
         },
         {
+            "src": "/api/webhook/test",
+            "methods": ["GET"],
+            "dest": "/api/webhook"
+        },
+        {
             "src": "/api/health",
             "methods": ["GET"],
             "dest": "/api/health"
