@@ -22,6 +22,11 @@
             "dest": "/api/update-knowledge"
         },
         {
+            "src": "/api/webhook",
+            "methods": ["POST"],
+            "dest": "/api/webhook"
+        },
+        {
             "src": "/api/health",
             "methods": ["GET"],
             "dest": "/api/health"
