@@ -1,72 +1,59 @@
 import requests
+import json
 from dotenv import load_dotenv
 import os
-import json
 
-# Load environment variables from .env file
+# Load environment variables
 load_dotenv()
 
-# Debug: Check if API key is loaded
-api_key = os.getenv('OPENAI_API_KEY')
-print(f"API Key loaded: {'Yes' if api_key else 'No'}")
-print(f"API Key length: {len(api_key) if api_key else 0}")
+# Configuration
+BASE_URL = "https://sofie-sage.vercel.app"
 
-# Test root endpoint
-print("\nTesting root endpoint...")
-try:
-    response = requests.get('https://sofie-sage.vercel.app/api/query/')
-    print(f"Status: {response.status_code}")
-    print(f"Response: {response.text}")
-except Exception as e:
-    print(f"Error: {str(e)}")
+# Test queries that should use knowledge base
+TEST_QUERIES = [
+    "What are the key points about fatigue risk management?",
+    "What are the requirements for pilot rest periods in Tanzania?",
+    "What is the maximum duty time for pilots according to Tanzanian regulations?"
+]
 
-# Test query endpoint
-print("\nTesting query endpoint...")
-try:
-    response = requests.post(
-        'https://sofie-sage.vercel.app/api/query',
-        json={'query': 'test'},
-        headers={'Content-Type': 'application/json'}
-    )
-    print(f"Status: {response.status_code}")
-    print(f"Response: {response.text}")
-except Exception as e:
-    print(f"Error: {str(e)}")
-
-try:
-    # Prepare request data
-    url = 'https://sofie-sage.vercel.app/api/query'
-    headers = {
-        'Content-Type': 'application/json'
-    }
-    data = {
-        'query': 'Summarize the new Fatique Risk regulations for an airline'
-    }
-
-    # Debug: Print request details
-    print("\nRequest Details:")
-    print(f"URL: {url}")
-    print(f"Headers: {json.dumps(headers, indent=2)}")
-    print(f"Data: {json.dumps(data, indent=2)}")
-
-    # Make the request
-    print("\nMaking request...")
-    response = requests.post(url, json=data, headers=headers)
+def test_endpoint(endpoint, method="GET", data=None):
+    url = f"{BASE_URL}{endpoint}"
+    headers = {"Content-Type": "application/json"}
     
-    # Debug: Print response details
-    print("\nResponse Details:")
-    print(f"Status Code: {response.status_code}")
-    print(f"Headers: {json.dumps(dict(response.headers), indent=2)}")
-    print(f"Response Body: {response.text}")
-
-    # Try to parse JSON response
+    print(f"\nTesting {endpoint}...")
+    print(f"Method: {method}")
+    print(f"URL: {url}")
+    if data:
+        print(f"Query: {data.get('query', '')}")
+    
     try:
-        json_response = response.json()
-        print(f"\nParsed JSON Response: {json.dumps(json_response, indent=2)}")
-    except json.JSONDecodeError as e:
-        print(f"\nCould not parse response as JSON: {str(e)}")
+        if method == "GET":
+            response = requests.get(url, headers=headers)
+        else:
+            response = requests.post(url, headers=headers, json=data)
+        
+        print(f"Status: {response.status_code}")
+        print("Response:", response.text)
+        
+        if response.status_code == 200:
+            try:
+                print("Parsed JSON Response:", json.dumps(response.json(), indent=2))
+            except:
+                print("Response is not JSON")
+        
+        return response
+        
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None
 
-except requests.exceptions.RequestException as e:
-    print(f"\nRequest Error: {str(e)}")
-except Exception as e:
-    print(f"\nUnexpected Error: {str(e)}") 
+def main():
+    print("Testing API with aviation-specific queries...")
+    
+    # Test each query
+    for query in TEST_QUERIES:
+        test_endpoint("/api/query", method="POST", data={"query": query})
+        print("\n" + "="*50)  # Separator between queries
+
+if __name__ == "__main__":
+    main() 

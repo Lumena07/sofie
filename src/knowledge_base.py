@@ -47,8 +47,12 @@ class KnowledgeBase:
         processed_documents = []
         for doc in documents:
             try:
-                content = self.drive_integration.download_file(doc['id'])
-                processed_content = self.document_processor.process_document(content)
+                content, mime_type = self.drive_integration.download_file(doc['id'])
+                if content is None or mime_type is None:
+                    print(f"Error downloading file: {doc['name']}")
+                    continue
+                    
+                processed_content = self.document_processor.process_document(content, mime_type)
                 processed_documents.append({
                     'id': doc['id'],
                     'name': doc['name'],

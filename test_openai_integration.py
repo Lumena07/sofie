@@ -4,7 +4,6 @@ Test script for OpenAI integration.
 This script verifies that the application can connect to OpenAI's API
 and generate responses using GPT models.
 """
-
 import os
 import sys
 from dotenv import load_dotenv

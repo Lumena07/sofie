@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     
     # OpenAI settings
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "")
+    openai_assistant_id: str = os.getenv("OPENAI_ASSISTANT_ID", "")
+    openai_vector_store_id: str = os.getenv("OPENAI_VECTOR_STORE_ID", "")
     
     # Vercel settings
     vercel_url: str = os.getenv("VERCEL_URL", "")

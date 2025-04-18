@@ -78,18 +78,25 @@ class DriveIntegration:
     def download_file(self, file_id):
         """Download a file from Google Drive."""
         try:
-            request = self.service.files().get_media(fileId=file_id)
-            file_content = io.BytesIO()
-            downloader = MediaIoBaseDownload(file_content, request)
+            # Get file metadata to determine MIME type
+            file_metadata = self.service.files().get(
+                fileId=file_id,
+                fields='mimeType'
+            ).execute()
+            mime_type = file_metadata.get('mimeType', 'application/octet-stream')
             
+            # Download file content
+            request = self.service.files().get_media(fileId=file_id)
+            fh = io.BytesIO()
+            downloader = MediaIoBaseDownload(fh, request)
             done = False
             while done is False:
                 status, done = downloader.next_chunk()
             
-            return file_content.getvalue().decode('utf-8')
+            return fh.getvalue(), mime_type
         except Exception as e:
             print(f"Error downloading file: {str(e)}")
-            return None
+            return None, None
 
     def list_files_in_folder(self, folder_id):
         """List all files in the specified folder."""
