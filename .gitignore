@@ -35,6 +35,7 @@ wheels/
 venv/
 ENV/
 env/
+.venv/
 
 # IDE
 .idea/
@@ -44,4 +45,18 @@ env/
 
 # Logs
 *.log
-logs/ 
+logs/
+
+# Local development
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel/
+
+# Temporary files
+temp_*.pdf
+vector_store.pkl
+
+# Token files
+!credentials.example.json 
