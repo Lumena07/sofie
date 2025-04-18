@@ -5,6 +5,7 @@ import os
 import logging
 import requests
 import sys
+from openai import OpenAI
 
 # Configure logging
 logging.basicConfig(
@@ -16,7 +17,14 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-BASE_URL = "https://sofie-sage.vercel.app"  # Hardcode the production URL
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+OPENAI_ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
+
+# Initialize OpenAI client
+client = OpenAI(api_key=OPENAI_API_KEY)
+
+# Store threads for each chat
+threads = {}
 
 async def send_telegram_message(chat_id: int, text: str):
     """Send a message using Telegram API."""
@@ -25,6 +33,13 @@ async def send_telegram_message(chat_id: int, text: str):
     response = requests.post(url, json=data)
     if not response.ok:
         logger.error(f"Failed to send message: {response.status_code} - {response.text}")
+
+def get_or_create_thread(chat_id: int) -> str:
+    """Get existing thread or create a new one for the chat."""
+    if chat_id not in threads:
+        thread = client.beta.threads.create()
+        threads[chat_id] = thread.id
+    return threads[chat_id]
 
 @app.post("/api/webhook")
 async def telegram_webhook(request: Request):
@@ -45,26 +60,56 @@ async def telegram_webhook(request: Request):
         elif text == "/help":
             await send_telegram_message(chat_id, "🤖 Just ask any question about Tanzanian aviation regulations!")
         else:
-            # Process query
-            logger.info(f"Making request to query endpoint with text: {text}")
-            query_url = f"{BASE_URL}/api/query"
-            logger.info(f"Query URL: {query_url}")
-            
+            # Process query using OpenAI Assistant
             try:
-                response = requests.post(query_url, json={"query": text})
-                logger.info(f"Query response status: {response.status_code}")
-                logger.info(f"Query response body: {response.text}")
+                # Get or create thread for this chat
+                thread_id = get_or_create_thread(chat_id)
                 
-                if response.status_code == 200:
-                    result = response.json()
-                    await send_telegram_message(chat_id, result["response"])
+                # Add message to thread
+                message = client.beta.threads.messages.create(
+                    thread_id=thread_id,
+                    role="user",
+                    content=text
+                )
+                
+                # Create and run
+                run = client.beta.threads.runs.create_and_poll(
+                    thread_id=thread_id,
+                    assistant_id=OPENAI_ASSISTANT_ID
+                )
+                
+                # Get messages
+                messages = list(client.beta.threads.messages.list(
+                    thread_id=thread_id,
+                    run_id=run.id
+                ))
+                
+                # Process response with citations
+                if messages:
+                    message_content = messages[0].content[0].text
+                    annotations = message_content.annotations
+                    citations = []
+                    
+                    for index, annotation in enumerate(annotations):
+                        message_content.value = message_content.value.replace(
+                            annotation.text, f"[{index}]"
+                        )
+                        if file_citation := getattr(annotation, "file_citation", None):
+                            cited_file = client.files.retrieve(file_citation.file_id)
+                            citations.append(f"[{index}] {cited_file.filename}")
+                    
+                    # Send response
+                    response_text = f"{message_content.value}"
+                    if citations:
+                        response_text += "\n\n📚 Citations:\n" + "\n".join(citations)
+                    
+                    await send_telegram_message(chat_id, response_text)
                 else:
-                    error_msg = f"Query endpoint error: {response.status_code} - {response.text}"
-                    logger.error(error_msg)
-                    await send_telegram_message(chat_id, "❌ Sorry, I encountered an error processing your query.")
+                    await send_telegram_message(chat_id, "❌ Sorry, I couldn't find any relevant information.")
+                    
             except Exception as e:
-                logger.error(f"Error making query request: {str(e)}")
-                await send_telegram_message(chat_id, "❌ Internal error while processing query.")
+                logger.error(f"Error processing query: {str(e)}")
+                await send_telegram_message(chat_id, "❌ Sorry, I encountered an error processing your query.")
         
         return JSONResponse(content={"status": "ok"})
     except Exception as e:
@@ -80,6 +125,6 @@ async def test_webhook():
     return {
         "status": "ok",
         "bot_token_set": bool(BOT_TOKEN),
-        "base_url": BASE_URL,
-        "query_url": f"{BASE_URL}/api/query"
+        "openai_api_key_set": bool(OPENAI_API_KEY),
+        "assistant_id_set": bool(OPENAI_ASSISTANT_ID)
     } 
