@@ -20,6 +20,9 @@ BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
 
+# Log environment variables (without sensitive values)
+logger.info(f"Environment variables loaded: BOT_TOKEN={bool(BOT_TOKEN)}, OPENAI_API_KEY={bool(OPENAI_API_KEY)}, OPENAI_ASSISTANT_ID={bool(OPENAI_ASSISTANT_ID)}")
+
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -30,15 +33,19 @@ async def send_telegram_message(chat_id: int, text: str):
     """Send a message using Telegram API."""
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+    logger.info(f"Sending message to chat {chat_id}: {text[:100]}...")
     response = requests.post(url, json=data)
     if not response.ok:
         logger.error(f"Failed to send message: {response.status_code} - {response.text}")
+    else:
+        logger.info(f"Message sent successfully to chat {chat_id}")
 
 def get_or_create_thread(chat_id: int) -> str:
     """Get existing thread or create a new one for the chat."""
     if chat_id not in threads:
         thread = client.beta.threads.create()
         threads[chat_id] = thread.id
+        logger.info(f"Created new thread {thread.id} for chat {chat_id}")
     return threads[chat_id]
 
 @app.post("/api/webhook")
@@ -52,16 +59,22 @@ async def telegram_webhook(request: Request):
         chat_id = message.get("chat", {}).get("id")
         text = message.get("text", "")
         
+        logger.info(f"Processing message: chat_id={chat_id}, text={text}")
+        
         if not chat_id:
+            logger.error("No chat_id found in message")
             return JSONResponse(status_code=400, content={"error": "No chat_id found"})
             
         if text == "/start":
+            logger.info(f"Handling /start command for chat {chat_id}")
             await send_telegram_message(chat_id, "👋 Welcome to Sofie! Ask me anything about Tanzanian aviation regulations.")
         elif text == "/help":
+            logger.info(f"Handling /help command for chat {chat_id}")
             await send_telegram_message(chat_id, "🤖 Just ask any question about Tanzanian aviation regulations!")
         else:
             # Process query using OpenAI Assistant
             try:
+                logger.info(f"Processing query for chat {chat_id}: {text}")
                 # Get or create thread for this chat
                 thread_id = get_or_create_thread(chat_id)
                 
@@ -103,8 +116,10 @@ async def telegram_webhook(request: Request):
                     if citations:
                         response_text += "\n\n📚 Citations:\n" + "\n".join(citations)
                     
+                    logger.info(f"Sending response to chat {chat_id}: {response_text[:100]}...")
                     await send_telegram_message(chat_id, response_text)
                 else:
+                    logger.warning(f"No messages found for chat {chat_id}")
                     await send_telegram_message(chat_id, "❌ Sorry, I couldn't find any relevant information.")
                     
             except Exception as e:
