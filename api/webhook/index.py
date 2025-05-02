@@ -16,12 +16,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+# Initialize environment variables
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 OPENAI_ASSISTANT_ID = os.environ.get("OPENAI_ASSISTANT_ID")
 
-# Log environment variables (without sensitive values)
-logger.info(f"Environment variables loaded: BOT_TOKEN={bool(BOT_TOKEN)}, OPENAI_API_KEY={bool(OPENAI_API_KEY)}, OPENAI_ASSISTANT_ID={bool(OPENAI_ASSISTANT_ID)}")
+# Validate environment variables
+if not all([BOT_TOKEN, OPENAI_API_KEY, OPENAI_ASSISTANT_ID]):
+    logger.error("Missing required environment variables")
+    raise ValueError("Missing required environment variables")
 
 # Initialize OpenAI client
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -31,22 +35,29 @@ threads = {}
 
 async def send_telegram_message(chat_id: int, text: str):
     """Send a message using Telegram API."""
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
-    logger.info(f"Sending message to chat {chat_id}: {text[:100]}...")
-    response = requests.post(url, json=data)
-    if not response.ok:
-        logger.error(f"Failed to send message: {response.status_code} - {response.text}")
-    else:
-        logger.info(f"Message sent successfully to chat {chat_id}")
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = {"chat_id": chat_id, "text": text, "parse_mode": "HTML"}
+        logger.info(f"Sending message to chat {chat_id}: {text[:100]}...")
+        response = requests.post(url, json=data)
+        if not response.ok:
+            logger.error(f"Failed to send message: {response.status_code} - {response.text}")
+        else:
+            logger.info(f"Message sent successfully to chat {chat_id}")
+    except Exception as e:
+        logger.error(f"Error sending message: {str(e)}")
 
 def get_or_create_thread(chat_id: int) -> str:
     """Get existing thread or create a new one for the chat."""
-    if chat_id not in threads:
-        thread = client.beta.threads.create()
-        threads[chat_id] = thread.id
-        logger.info(f"Created new thread {thread.id} for chat {chat_id}")
-    return threads[chat_id]
+    try:
+        if chat_id not in threads:
+            thread = client.beta.threads.create()
+            threads[chat_id] = thread.id
+            logger.info(f"Created new thread {thread.id} for chat {chat_id}")
+        return threads[chat_id]
+    except Exception as e:
+        logger.error(f"Error creating thread: {str(e)}")
+        raise
 
 @app.post("/api/webhook")
 async def telegram_webhook(request: Request):
@@ -137,9 +148,16 @@ async def telegram_webhook(request: Request):
 @app.get("/api/webhook/test")
 async def test_webhook():
     """Test endpoint to verify the webhook is running."""
-    return {
-        "status": "ok",
-        "bot_token_set": bool(BOT_TOKEN),
-        "openai_api_key_set": bool(OPENAI_API_KEY),
-        "assistant_id_set": bool(OPENAI_ASSISTANT_ID)
-    } 
+    try:
+        return {
+            "status": "ok",
+            "bot_token_set": bool(BOT_TOKEN),
+            "openai_api_key_set": bool(OPENAI_API_KEY),
+            "assistant_id_set": bool(OPENAI_ASSISTANT_ID)
+        }
+    except Exception as e:
+        logger.error(f"Error in test endpoint: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        ) 
