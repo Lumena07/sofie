@@ -55,3 +55,6 @@ out
 
 # Vercel
 .vercel
+
+credentials.json
+token.pickle
